@@ -1,13 +1,12 @@
 import express from 'express';
+import cors from 'cors';
+import fetch from "isomorphic-fetch";
+import _ from "lodash";
+import pc from "./jsonPC.js";
+
 const app = express();
 
-app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    next();
-});
+app.use(cors());
 
 app.get('/skb3', function (req, res) {
     const a = req.query.a || 0;
@@ -51,6 +50,42 @@ app.get('/skb5', function (req, res) {
         return res.send('Invalid username');
 
     res.send('@' + username[6]);
+});
+
+app.get('/skb6/volumes', function (req, res) {
+    pc.then(json => {
+        let data = {};
+        json.hdd.forEach(value => {
+            data[value.volume] = data[value.volume] ? data[value.volume] + value.size : value.size;
+        });
+        _.forEach(data, (value, key) => {
+            data[key] = value + 'B';
+        });
+        res.status(200).send(data);
+    });
+});
+
+app.get(/^\/skb6\/?(\-?\w+)?\/?(\-?\w+)?\/?(\-?\w+)?\/?$/, function (req, res) {
+    const struct = _.filter(req.params, el =>  el != undefined);
+
+    pc.then(json => {
+        let data = json;
+        try {
+            _.forEach(struct, (value, key) => {
+                data = data[value];
+            });
+        } catch (err) {
+            data = undefined;
+        }
+        if (data === undefined)
+            return res.status(404).send('Not found');
+
+        res.json(data);
+    });
+});
+
+app.use(function(req, res, next) {
+    res.status(404).send('Not found');
 });
 
 app.listen(3000, function () {
