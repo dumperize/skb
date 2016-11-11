@@ -2,21 +2,10 @@ import express from 'express';
 const app = express();
 
 app.use(function (req, res, next) {
-
-    // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', '*');
-
-    // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-    // Request headers you wish to allow
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-    // Set to true if you need the website to include cookies in the requests sent
-    // to the API (e.g. in case you use sessions)
     res.setHeader('Access-Control-Allow-Credentials', true);
-
-    // Pass to next layer of middleware
     next();
 });
 
@@ -51,6 +40,17 @@ app.get('/skb4', function (req, res) {
 
     }
     return res.send(name);
+});
+
+app.get('/skb5', function (req, res) {
+
+    const re = new RegExp('@?(https?:)?(\/\/)?(www\.)?((xn--80adtgbbrh1bc.xn--p1ai|medium|telegram|twitter|github|vk|vkontakte)[^\/]*\/)?@?([a-zA-Z0-9\._]*)', 'i');
+    const username = req.query.username.match(re);
+
+    if (!username[6])
+        return res.send('Invalid username');
+
+    res.send('@' + username[6]);
 });
 
 app.listen(3000, function () {
